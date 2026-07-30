@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- เปลี่ยนชื่อ Title บน Tab เบราว์เซอร์ -->
+  <!-- ชื่อ Title บน Tab เบราว์เซอร์ -->
   <title>Ventilation</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -106,7 +106,9 @@
       padding: 20px;
       border-radius: 20px;
       display: flex;
-      justify-content: flex-end; /* ปรับให้อยู่ฝั่งขวา */
+      justify-content: space-between; /* จัดวันที่ไว้ฝั่งซ้าย และเวลาไว้ฝั่งขวา */
+      flex-wrap: wrap;
+      gap: 15px;
       font-size: 18px;
     }
 
@@ -119,7 +121,7 @@
       .value {
         font-size: 46px;
       }
-      
+
       .footer {
         justify-content: center;
       }
@@ -130,8 +132,7 @@
 <body>
 
   <div class="header">
-    <!-- เปลี่ยนชื่อหัวข้อระบบตรงนี้ -->
-    <h1>Battery Thermal Ventilation Unit </h1>
+    <h1>Battery Thermal Ventilation Unit</h1>
 
     <div class="online" id="onlineStatus">
       🟢 ONLINE
@@ -163,9 +164,11 @@
   </div>
 
   <div class="footer">
-    <!-- ลบช่อง Date ออก เหลือเฉพาะ Time -->
     <div>
-      🕒 Time : <span id="time">--:--:--</span>
+      📅 Date : <span id="currentDate">--/--/----</span>
+    </div>
+    <div>
+      🕒 Time : <span id="currentTime">--:--:--</span>
     </div>
   </div>
 
@@ -175,6 +178,38 @@
 
     let lastUpdate = Date.now();
 
+    // ==========================================
+    // นาฬิกาและวันที่ปัจจุบัน ( Real-time )
+    // ==========================================
+    function updateClock() {
+      const now = new Date();
+
+      // วันที่ รูปแบบ วัน/เดือน/ปี พ.ศ.
+      const dateString = now.toLocaleDateString('th-TH', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+
+      // เวลา รูปแบบ HH:MM:SS
+      const timeString = now.toLocaleTimeString('th-TH', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+
+      document.getElementById("currentDate").innerText = dateString;
+      document.getElementById("currentTime").innerText = timeString;
+    }
+
+    updateClock();
+    setInterval(updateClock, 1000); // อัปเดตเวลาทุก 1 วินาที
+
+
+    // ==========================================
+    // ดึงค่าจากระบบ (Google Apps Script)
+    // ==========================================
     async function updateDashboard() {
       try {
         const response = await fetch(SCRIPT_URL);
@@ -190,10 +225,6 @@
 
         document.getElementById("smoke").innerHTML =
           data.smoke;
-
-        // ลบส่วนดึงค่า date ออก เหลือเฉพาะ time
-        document.getElementById("time").innerHTML =
-          data.time;
 
         //-------------------------
         // Temperature Status
@@ -242,7 +273,7 @@
 
   <script>
     // ==============================
-    // ONLINE / OFFLINE
+    // ONLINE / OFFLINE Check
     // ==============================
     setInterval(function () {
       let online = document.getElementById("onlineStatus");

@@ -2,456 +2,281 @@
 <html lang="en">
 
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Temperature Monitoring System</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-<style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'Poppins',sans-serif;
-}
-
-body{
-
-background:#0f172a;
-color:white;
-padding:30px;
-
-}
-
-.header{
-
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:35px;
-
-}
-
-.header h1{
-
-font-size:34px;
-font-weight:700;
-
-}
-
-.online{
-
-background:#22c55e;
-padding:10px 22px;
-border-radius:30px;
-font-weight:bold;
-font-size:18px;
-
-}
-
-.cards{
-
-display:grid;
-
-grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-
-gap:25px;
-
-}
-
-.card{
-
-background:#1e293b;
-
-border-radius:20px;
-
-padding:30px;
-
-box-shadow:0 8px 20px rgba(0,0,0,.35);
-
-transition:.3s;
-
-}
-
-.card:hover{
-
-transform:translateY(-6px);
-
-}
-
-.icon{
-
-font-size:55px;
-
-margin-bottom:15px;
-
-}
-
-.title{
-
-font-size:20px;
-
-color:#94a3b8;
-
-margin-bottom:10px;
-
-}
-
-.value{
-
-font-size:60px;
-
-font-weight:bold;
-
-margin-bottom:15px;
-
-}
-
-.status{
-
-display:inline-block;
-
-padding:10px 18px;
-
-border-radius:20px;
-
-font-weight:bold;
-
-font-size:18px;
-
-}
-
-.normal{
-
-background:#22c55e;
-
-}
-
-.warning{
-
-background:#facc15;
-
-color:#111827;
-
-}
-
-.danger{
-
-background:#ef4444;
-
-}
-
-.footer{
-
-margin-top:45px;
-
-background:#1e293b;
-
-padding:20px;
-
-border-radius:20px;
-
-display:flex;
-
-justify-content:space-between;
-
-flex-wrap:wrap;
-
-font-size:18px;
-
-}
-
-@media(max-width:700px){
-
-.header{
-
-flex-direction:column;
-
-gap:20px;
-
-}
-
-.value{
-
-font-size:46px;
-
-}
-
-}
-
-</style>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- เปลี่ยนชื่อ Title บน Tab เบราว์เซอร์ -->
+  <title>Ventilation</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: #0f172a;
+      color: white;
+      padding: 30px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 35px;
+    }
+
+    .header h1 {
+      font-size: 34px;
+      font-weight: 700;
+    }
+
+    .online {
+      background: #22c55e;
+      padding: 10px 22px;
+      border-radius: 30px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+    }
+
+    .card {
+      background: #1e293b;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, .35);
+      transition: .3s;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+    }
+
+    .icon {
+      font-size: 55px;
+      margin-bottom: 15px;
+    }
+
+    .title {
+      font-size: 20px;
+      color: #94a3b8;
+      margin-bottom: 10px;
+    }
+
+    .value {
+      font-size: 60px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 10px 18px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .normal {
+      background: #22c55e;
+    }
+
+    .warning {
+      background: #facc15;
+      color: #111827;
+    }
+
+    .danger {
+      background: #ef4444;
+    }
+
+    .footer {
+      margin-top: 45px;
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 20px;
+      display: flex;
+      justify-content: flex-end; /* ปรับให้อยู่ฝั่งขวา */
+      font-size: 18px;
+    }
+
+    @media(max-width:700px) {
+      .header {
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .value {
+        font-size: 46px;
+      }
+      
+      .footer {
+        justify-content: center;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="header">
+  <div class="header">
+    <!-- เปลี่ยนชื่อหัวข้อระบบตรงนี้ -->
+    <h1>Smart Monitoring & Safety Dashboard</h1>
 
-<h1>Temperature Monitoring System</h1>
+    <div class="online" id="onlineStatus">
+      🟢 ONLINE
+    </div>
+  </div>
 
-<div class="online" id="onlineStatus">
+  <div class="cards">
 
-🟢 ONLINE
+    <div class="card">
+      <div class="icon">🌡️</div>
+      <div class="title">Temperature</div>
+      <div class="value" id="temp">0.0°C</div>
+      <div class="status normal" id="tempStatus">NORMAL</div>
+    </div>
 
-</div>
+    <div class="card">
+      <div class="icon">⚡</div>
+      <div class="title">Output Voltage</div>
+      <div class="value" id="volt">0.00V</div>
+    </div>
 
-</div>
+    <div class="card">
+      <div class="icon">💨</div>
+      <div class="title">Smoke Sensor</div>
+      <div class="value" id="smoke">0</div>
+      <div class="status normal" id="smokeStatus">SAFE</div>
+    </div>
 
-<div class="cards">
+  </div>
 
-<div class="card">
+  <div class="footer">
+    <!-- ลบช่อง Date ออก เหลือเฉพาะ Time -->
+    <div>
+      🕒 Time : <span id="time">--:--:--</span>
+    </div>
+  </div>
 
-<div class="icon">🌡️</div>
+  <script>
+    const SCRIPT_URL =
+      "https://script.google.com/macros/s/AKfycbww81ymNHGcJ8uTX09P932X0idIk3-GzSbl7EgzdcF8Fp4ENpmZj2ut92Qom9gEs5GE/exec";
 
-<div class="title">
+    let lastUpdate = Date.now();
 
-Temperature
-
-</div>
-
-<div class="value" id="temp">
-
-0.0°C
-
-</div>
-
-<div class="status normal" id="tempStatus">
-
-NORMAL
-
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="icon">⚡</div>
-
-<div class="title">
-
-Output Voltage
-
-</div>
-
-<div class="value" id="volt">
-
-0.00V
-
-</div>
-
-</div>
-
-<div class="card">
-
-<div class="icon">💨</div>
-
-<div class="title">
-
-Smoke Sensor
-
-</div>
-
-<div class="value" id="smoke">
-
-0
-
-</div>
-
-<div class="status normal" id="smokeStatus">
-
-SAFE
-
-</div>
-
-</div>
-
-</div>
-
-<div class="footer">
-
-<div>
-
-📅 Date :
-<span id="date">--/--/----</span>
-
-</div>
-
-<div>
-
-🕒 Time :
-<span id="time">--:--:--</span>
-
-</div>
-
-</div>
-<script>
-
-const SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbww81ymNHGcJ8uTX09P932X0idIk3-GzSbl7EgzdcF8Fp4ENpmZj2ut92Qom9gEs5GE/exec";
-
-let lastUpdate = Date.now();
-
-async function updateDashboard(){
-
-    try{
-
+    async function updateDashboard() {
+      try {
         const response = await fetch(SCRIPT_URL);
-
         const data = await response.json();
 
         lastUpdate = Date.now();
 
         document.getElementById("temp").innerHTML =
-            parseFloat(data.temp).toFixed(1)+"°C";
+          parseFloat(data.temp).toFixed(1) + "°C";
 
         document.getElementById("volt").innerHTML =
-            parseFloat(data.volt).toFixed(2)+"V";
+          parseFloat(data.volt).toFixed(2) + "V";
 
         document.getElementById("smoke").innerHTML =
-            data.smoke;
+          data.smoke;
 
-        document.getElementById("date").innerHTML =
-            data.date;
-
+        // ลบส่วนดึงค่า date ออก เหลือเฉพาะ time
         document.getElementById("time").innerHTML =
-            data.time;
+          data.time;
 
         //-------------------------
         // Temperature Status
         //-------------------------
+        let temp = parseFloat(data.temp);
+        let tempStatus = document.getElementById("tempStatus");
+        tempStatus.className = "status";
 
-        let temp=parseFloat(data.temp);
-
-        let tempStatus=document.getElementById("tempStatus");
-
-        tempStatus.className="status";
-
-        if(temp>=50){
-
-            tempStatus.innerHTML="DANGER";
-            tempStatus.classList.add("danger");
-
-        }
-
-        else if(temp>=40){
-
-            tempStatus.innerHTML="WARNING";
-            tempStatus.classList.add("warning");
-
-        }
-
-        else{
-
-            tempStatus.innerHTML="NORMAL";
-            tempStatus.classList.add("normal");
-
+        if (temp >= 50) {
+          tempStatus.innerHTML = "DANGER";
+          tempStatus.classList.add("danger");
+        } else if (temp >= 40) {
+          tempStatus.innerHTML = "WARNING";
+          tempStatus.classList.add("warning");
+        } else {
+          tempStatus.innerHTML = "NORMAL";
+          tempStatus.classList.add("normal");
         }
 
         //-------------------------
         // Smoke Status
         //-------------------------
+        let smoke = parseInt(data.smoke);
+        let smokeStatus = document.getElementById("smokeStatus");
+        smokeStatus.className = "status";
 
-        let smoke=parseInt(data.smoke);
-
-        let smokeStatus=document.getElementById("smokeStatus");
-
-        smokeStatus.className="status";
-
-        if(smoke<=200){
-
-            smokeStatus.innerHTML="SAFE";
-            smokeStatus.classList.add("normal");
-
+        if (smoke <= 200) {
+          smokeStatus.innerHTML = "SAFE";
+          smokeStatus.classList.add("normal");
+        } else if (smoke <= 500) {
+          smokeStatus.innerHTML = "WARNING";
+          smokeStatus.classList.add("warning");
+        } else {
+          smokeStatus.innerHTML = "DANGER";
+          smokeStatus.classList.add("danger");
         }
 
-        else if(smoke<=500){
-
-            smokeStatus.innerHTML="WARNING";
-            smokeStatus.classList.add("warning");
-
-        }
-
-        else{
-
-            smokeStatus.innerHTML="DANGER";
-            smokeStatus.classList.add("danger");
-
-        }
-
-    }
-
-    catch(err){
-
+      } catch (err) {
         console.log(err);
-
+      }
     }
 
-}
+    updateDashboard();
+    setInterval(updateDashboard, 500);
+  </script>
 
-updateDashboard();
+  <script>
+    // ==============================
+    // ONLINE / OFFLINE
+    // ==============================
+    setInterval(function () {
+      let online = document.getElementById("onlineStatus");
 
-setInterval(updateDashboard,500);
+      if (Date.now() - lastUpdate > 10000) {
+        online.innerHTML = "🔴 OFFLINE";
+        online.style.background = "#ef4444";
+      } else {
+        online.innerHTML = "🟢 ONLINE";
+        online.style.background = "#22c55e";
+      }
+    }, 1000);
 
-</script>
-<script>
 
-// ==============================
-// ONLINE / OFFLINE
-// ==============================
+    // ==============================
+    // Animation
+    // ==============================
+    function flash(id) {
+      const obj = document.getElementById(id);
+      obj.style.transform = "scale(1.08)";
+      obj.style.transition = "0.25s";
 
-setInterval(function(){
-
-    let online = document.getElementById("onlineStatus");
-
-    if(Date.now()-lastUpdate>10000){
-
-        online.innerHTML="🔴 OFFLINE";
-        online.style.background="#ef4444";
-
+      setTimeout(() => {
+        obj.style.transform = "scale(1)";
+      }, 250);
     }
 
-    else{
-
-        online.innerHTML="🟢 ONLINE";
-        online.style.background="#22c55e";
-
-    }
-
-},1000);
-
-
-// ==============================
-// Animation
-// ==============================
-
-function flash(id){
-
-    const obj=document.getElementById(id);
-
-    obj.style.transform="scale(1.08)";
-    obj.style.transition="0.25s";
-
-    setTimeout(()=>{
-
-        obj.style.transform="scale(1)";
-
-    },250);
-
-}
-
-setInterval(()=>{
-
-    flash("temp");
-    flash("volt");
-    flash("smoke");
-
-},3000);
-
-</script>
+    setInterval(() => {
+      flash("temp");
+      flash("volt");
+      flash("smoke");
+    }, 3000);
+  </script>
 
 </body>
+
 </html>

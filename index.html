@@ -1,1 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>Temperature Monitoring Dashboard</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial;
+}
+
+body{
+
+background:#0f172a;
+color:white;
+padding:20px;
+
+}
+
+h1{
+
+text-align:center;
+margin-bottom:20px;
+
+}
+
+.container{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+
+gap:20px;
+
+margin-bottom:20px;
+
+}
+
+.card{
+
+background:#1e293b;
+
+padding:20px;
+
+border-radius:15px;
+
+box-shadow:0 0 15px rgba(0,0,0,.4);
+
+text-align:center;
+
+}
+
+.title{
+
+font-size:22px;
+
+margin-bottom:10px;
+
+color:#94a3b8;
+
+}
+
+.value{
+
+font-size:48px;
+
+font-weight:bold;
+
+}
+
+.status{
+
+margin-top:15px;
+
+font-size:28px;
+
+font-weight:bold;
+
+}
+
+canvas{
+
+background:white;
+
+border-radius:15px;
+
+padding:15px;
+
+}
+
+.footer{
+
+margin-top:20px;
+
+text-align:center;
+
+color:#94a3b8;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>🔥 Temperature Monitoring Dashboard</h1>
+
+<div class="container">
+
+<div class="card">
+
+<div class="title">Temperature</div>
+
+<div class="value" id="temp">0 °C</div>
+
+<div class="status" id="tempStatus">NORMAL</div>
+
+</div>
+
+<div class="card">
+
+<div class="title">Output Voltage</div>
+
+<div class="value" id="volt">0 V</div>
+
+</div>
+
+<div class="card">
+
+<div class="title">Smoke</div>
+
+<div class="value" id="smoke">0</div>
+
+<div class="status" id="smokeStatus">SAFE</div>
+
+</div>
+
+<div class="card">
+
+<div class="title">Last Update</div>
+
+<div id="date">--</div>
+
+<br>
+
+<div id="time">--</div>
+
+</div>
+
+</div>
+
+<canvas id="chart"></canvas>
+
+<div class="footer">
+
+Arduino Mega + ESP32 + Google Sheets
+
+</div>
+<script>
+
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbww81ymNHGcJ8uTX09P932X0idIk3-GzSbl7EgzdcF8Fp4ENpmZj2ut92Qom9gEs5GE/exec";
+
+const labels = [];
+const tempData = [];
+
+const ctx = document.getElementById("chart").getContext("2d");
+
+const chart = new Chart(ctx,{
+    type:"line",
+    data:{
+        labels:labels,
+        datasets:[{
+            label:"Temperature (°C)",
+            data:tempData,
+            borderColor:"#ff0000",
+            borderWidth:3,
+            fill:false,
+            tension:0.3
+        }]
+    },
+    options:{
+        responsive:true,
+        animation:false,
+        scales:{
+            y:{
+                min:0,
+                max:100
+            }
+        }
+    }
+});
+
+async function updateData(){
+
+    try{
+
+        const res = await fetch(SCRIPT_URL);
+
+        const data = await res.json();
+
+        document.getElementById("temp").innerHTML=data.temp+" °C";
+        document.getElementById("volt").innerHTML=data.volt+" V";
+        document.getElementById("smoke").innerHTML=data.smoke;
+        document.getElementById("date").innerHTML=data.date;
+        document.getElementById("time").innerHTML=data.time;
+
+        // Temperature Status
+        let t=parseFloat(data.temp);
+
+        let tempStatus=document.getElementById("tempStatus");
+
+        if(t>=50){
+
+            tempStatus.innerHTML="DANGER";
+            tempStatus.style.color="red";
+
+        }
+
+        else if(t>=40){
+
+            tempStatus.innerHTML="WARNING";
+            tempStatus.style.color="orange";
+
+        }
+
+        else{
+
+            tempStatus.innerHTML="NORMAL";
+            tempStatus.style.color="lime";
+
+        }
+
+        // Smoke Status
+        let smoke=parseInt(data.smoke);
+
+        let smokeStatus=document.getElementById("smokeStatus");
+
+        if(smoke<=200){
+
+            smokeStatus.innerHTML="SAFE";
+            smokeStatus.style.color="lime";
+
+        }
+
+        else if(smoke<=500){
+
+            smokeStatus.innerHTML="WARNING";
+            smokeStatus.style.color="orange";
+
+        }
+
+        else{
+
+            smokeStatus.innerHTML="DANGER";
+            smokeStatus.style.color="red";
+
+        }
+
+        labels.push("");
+
+        tempData.push(t);
+
+        if(labels.length>50){
+
+            labels.shift();
+            tempData.shift();
+
+        }
+
+        chart.update();
+
+    }
+
+    catch(err){
+
+        console.log(err);
+
+    }
+
+}
+
+updateData();
+
+setInterval(updateData,5000);
+
+</script>
+
+</body>
+</html>

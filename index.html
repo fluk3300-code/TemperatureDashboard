@@ -247,7 +247,7 @@
       }
 
       .charts-container {
-        grid-template-columns: 1fr; /* บนมือถือปรับเป็น 1 คอลัมน์ */
+        grid-template-columns: 1fr;
       }
 
       .chart-wrapper {
@@ -267,7 +267,6 @@
   <div class="header">
     <div class="header-left">
       <h1>Battery Thermal Ventilation Unit</h1>
-      <!-- ปุ่ม Toggle Dark/Light Mode -->
       <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
         🌙 Dark Mode
       </button>
@@ -277,9 +276,7 @@
     </div>
   </div>
 
-  <!-- Cards แสดงค่าปัจจุบัน -->
   <div class="cards">
-
     <div class="card">
       <div class="icon">🌡️</div>
       <div class="title">Temperature</div>
@@ -299,12 +296,9 @@
       <div class="value" id="smoke">0</div>
       <div class="status normal" id="smokeStatus">SAFE</div>
     </div>
-
   </div>
 
-  <!-- ส่วนกล่องกราฟ Real-time Analytics -->
   <div class="charts-container">
-    
     <div class="chart-card">
       <h3>🌡️ Temperature History (°C)</h3>
       <div class="chart-wrapper">
@@ -318,7 +312,6 @@
         <canvas id="smokeChart"></canvas>
       </div>
     </div>
-
   </div>
 
   <div class="footer">
@@ -337,7 +330,8 @@
     // ==========================================
     // ตัวแปรและตั้งค่า Chart.js Real-time
     // ==========================================
-    const maxDataPoints = 15; // จำกัดจุดข้อมูลย้อนหลังไม่เกิน 15 ค่าเพื่อเซฟ RAM
+    const maxDataPoints = 10;     // แสดงสูงสุด 10 จุด
+    let chartTimerCounter = 0;   // ตัวนับวินาทีสำหรับอัปเดตกราฟ
 
     const getTextColor = () => document.documentElement.getAttribute("data-theme") === "light" ? "#0f172a" : "#ffffff";
     const getGridColor = () => document.documentElement.getAttribute("data-theme") === "light" ? "#e2e8f0" : "#334155";
@@ -398,12 +392,16 @@
       }
     });
 
-    // ฟังก์ชันอัปเดตกราฟพร้อมควบคุมขนาด Array
+    // ฟังก์ชันอัปเดตกราฟ (สะสมครบ 10 จุดแล้วเคลียร์เริ่มนับใหม่)
     function addChartData(chart, label, value, alertType) {
+      if (chart.data.labels.length >= maxDataPoints) {
+        chart.data.labels = [];
+        chart.data.datasets[0].data = [];
+      }
+
       chart.data.labels.push(label);
       chart.data.datasets[0].data.push(value);
 
-      // เปลี่ยนสีกราฟตามระดับ Warning/Danger
       if (alertType === "danger") {
         chart.data.datasets[0].borderColor = '#ef4444';
         chart.data.datasets[0].backgroundColor = 'rgba(239, 68, 68, 0.2)';
@@ -415,17 +413,11 @@
         chart.data.datasets[0].backgroundColor = (chart === tempChart) ? 'rgba(34, 197, 94, 0.15)' : 'rgba(59, 130, 246, 0.15)';
       }
 
-      // ถ้าเกิน 15 จุด ให้ตัดจุดเก่าสุดออก
-      if (chart.data.labels.length > maxDataPoints) {
-        chart.data.labels.shift();
-        chart.data.datasets[0].data.shift();
-      }
-
-      chart.update('none'); // อัปเดตแบบประหยัด CPU
+      chart.update();
     }
 
     // ==========================================
-    // ระบบ Toggle Dark / Light Mode (พร้อมอัปเดตสี กราฟ)
+    // ระบบ Toggle Dark / Light Mode
     // ==========================================
     function toggleTheme() {
       const currentTheme = document.documentElement.getAttribute("data-theme");
@@ -441,7 +433,6 @@
         localStorage.setItem("theme", "light");
       }
 
-      // อัปเดตสีกราฟให้เข้ากับธีมใหม่
       [tempChart, smokeChart].forEach(chart => {
         chart.options.scales.x.ticks.color = getTextColor();
         chart.options.scales.x.grid.color = getGridColor();
@@ -451,7 +442,6 @@
       });
     }
 
-    // โหลดค่าธีมเดิมจาก LocalStorage
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "light") {
       document.documentElement.setAttribute("data-theme", "light");
@@ -483,7 +473,7 @@
     setInterval(updateClock, 1000);
 
     // ==========================================
-    // ดึงค่าจากระบบ Google Apps Script
+    // ดึงข้อมูลหลัก (ทำงานทุกๆ 1 วินาที)
     // ==========================================
     async function updateDashboard() {
       try {
@@ -517,14 +507,14 @@
           let volt = parseFloat(data.volt);
           let smoke = parseInt(data.smoke);
 
+          // อัปเดตตัวเลขบน Card ทันทีทุกๆ 1 วินาที
           document.getElementById("temp").innerHTML = temp.toFixed(1) + "°C";
           document.getElementById("volt").innerHTML = volt.toFixed(2) + "V";
           document.getElementById("smoke").innerHTML = smoke;
 
-          // Temp Status & Alert Class
+          // คำนวณสถานะ Temp
           let tempAlertType = "normal";
           tempStatus.className = "status";
-
           if (temp >= 50) {
             tempStatus.innerHTML = "DANGER";
             tempStatus.classList.add("danger");
@@ -538,10 +528,9 @@
             tempStatus.classList.add("normal");
           }
 
-          // Smoke Status & Alert Class
+          // คำนวณสถานะ Smoke
           let smokeAlertType = "normal";
           smokeStatus.className = "status";
-
           if (smoke <= 200) {
             smokeStatus.innerHTML = "SAFE";
             smokeStatus.classList.add("normal");
@@ -555,9 +544,16 @@
             smokeAlertType = "danger";
           }
 
-          // อัปเดตข้อมูลเข้าสู่เส้นกราฟ Real-time
-          addChartData(tempChart, timeNow, temp, tempAlertType);
-          addChartData(smokeChart, timeNow, smoke, smokeAlertType);
+          // ----------------------------------------------------
+          // ตัวนับเวลาอัปเดตกราฟ (จุดละ 30 วินาที)
+          // ----------------------------------------------------
+          chartTimerCounter++;
+          
+          if (chartTimerCounter === 1 || chartTimerCounter >= 30) {
+            addChartData(tempChart, timeNow, temp, tempAlertType);
+            addChartData(smokeChart, timeNow, smoke, smokeAlertType);
+            chartTimerCounter = 0;
+          }
         }
 
       } catch (err) {
@@ -568,16 +564,18 @@
     updateDashboard();
     setInterval(updateDashboard, 1000);
 
-    // ==============================
-    // Animation
-    // ==============================
+    // ==========================================
+    // Card Flash Animation
+    // ==========================================
     function flash(id) {
       const obj = document.getElementById(id);
-      obj.style.transform = "scale(1.08)";
-      obj.style.transition = "0.25s";
-      setTimeout(() => {
-        obj.style.transform = "scale(1)";
-      }, 250);
+      if (obj) {
+        obj.style.transform = "scale(1.08)";
+        obj.style.transition = "0.25s";
+        setTimeout(() => {
+          obj.style.transform = "scale(1)";
+        }, 250);
+      }
     }
 
     setInterval(() => {

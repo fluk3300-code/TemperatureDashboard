@@ -1,301 +1,55 @@
-<!DOCTYPE html>
-<html lang="en">
+function doGet(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ventilation</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  // 1. ถ้าบอร์ดส่งข้อมูลมาบันทึก (มีค่า temp ส่งมา)
+  if (e.parameter.temp != null) {
+    var now = new Date();
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Poppins', sans-serif;
-    }
+    var date = Utilities.formatDate(now, "Asia/Bangkok", "dd/MM/yyyy");
+    var time = Utilities.formatDate(now, "Asia/Bangkok", "HH:mm:ss");
 
-    body {
-      background: #0f172a;
-      color: white;
-      padding: 30px;
-    }
+    // บันทึกค่าลงแถวที่ 2
+    sheet.getRange(2, 1).setValue(date);
+    sheet.getRange(2, 2).setValue(time);
+    sheet.getRange(2, 3).setValue(e.parameter.temp);
+    sheet.getRange(2, 4).setValue(e.parameter.volt);
+    sheet.getRange(2, 5).setValue(e.parameter.smoke);
+    sheet.getRange(2, 6).setValue(now.getTime()); // บันทึกเวลา Timestamp ไว้เช็คค้าง
 
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 35px;
-    }
+    return ContentService.createTextOutput("OK");
+  }
 
-    .header h1 {
-      font-size: 34px;
-      font-weight: 700;
-    }
+  // 2. ถ้าหน้าเว็บดึงข้อมูลไปแสดงผล
+  var data = sheet.getRange(2, 1, 1, 6).getValues()[0];
+  var lastTimestamp = data[5]; // เวลาที่บอร์ดส่งมาล่าสุด
+  var currentTime = new Date().getTime(); // เวลาปัจจุบันของระบบ
 
-    .online {
-      background: #22c55e;
-      padding: 10px 22px;
-      border-radius: 30px;
-      font-weight: bold;
-      font-size: 18px;
-    }
+  // คำนวณความต่างเวลา (หน่วยวินาที)
+  var diffInSeconds = (currentTime - lastTimestamp) / 1000;
 
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 25px;
-    }
+  // ถ้านานเกิน 15 วินาที หรือยังไม่มีข้อมูลบันทึก ให้ส่งสถานะ offline
+  if (!lastTimestamp || diffInSeconds > 15) {
+    var json = {
+      status: "offline",
+      temp: 0,
+      volt: 0,
+      smoke: 0,
+      date: "-",
+      time: "-"
+    };
+  } else {
+    // ถ้าระบบส่งข้อมูลมาปกติ (ไม่เกิน 15 วินาที)
+    var json = {
+      status: "online",
+      date: data[0],
+      time: data[1],
+      temp: data[2],
+      volt: data[3],
+      smoke: data[4]
+    };
+  }
 
-    .card {
-      background: #1e293b;
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, .35);
-      transition: .3s;
-    }
-
-    .card:hover {
-      transform: translateY(-6px);
-    }
-
-    .icon {
-      font-size: 55px;
-      margin-bottom: 15px;
-    }
-
-    .title {
-      font-size: 20px;
-      color: #94a3b8;
-      margin-bottom: 10px;
-    }
-
-    .value {
-      font-size: 60px;
-      font-weight: bold;
-      margin-bottom: 15px;
-    }
-
-    .status {
-      display: inline-block;
-      padding: 10px 18px;
-      border-radius: 20px;
-      font-weight: bold;
-      font-size: 18px;
-    }
-
-    .normal {
-      background: #22c55e;
-    }
-
-    .warning {
-      background: #facc15;
-      color: #111827;
-    }
-
-    .danger {
-      background: #ef4444;
-    }
-
-    .footer {
-      margin-top: 45px;
-      background: #1e293b;
-      padding: 20px;
-      border-radius: 20px;
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 15px;
-      font-size: 18px;
-    }
-
-    @media(max-width:700px) {
-      .header {
-        flex-direction: column;
-        gap: 20px;
-      }
-
-      .value {
-        font-size: 46px;
-      }
-
-      .footer {
-        justify-content: center;
-      }
-    }
-  </style>
-</head>
-
-<body>
-
-  <div class="header">
-    <h1>Battery Thermal Ventilation Unit</h1>
-    <div class="online" id="onlineStatus">
-      🟢 ONLINE
-    </div>
-  </div>
-
-  <div class="cards">
-
-    <div class="card">
-      <div class="icon">🌡️</div>
-      <div class="title">Temperature</div>
-      <div class="value" id="temp">0.0°C</div>
-      <div class="status normal" id="tempStatus">NORMAL</div>
-    </div>
-
-    <div class="card">
-      <div class="icon">⚡</div>
-      <div class="title">Output Voltage</div>
-      <div class="value" id="volt">0.00V</div>
-    </div>
-
-    <div class="card">
-      <div class="icon">💨</div>
-      <div class="title">Smoke Sensor</div>
-      <div class="value" id="smoke">0</div>
-      <div class="status normal" id="smokeStatus">SAFE</div>
-    </div>
-
-  </div>
-
-  <div class="footer">
-    <div>
-      📅 Date : <span id="currentDate">--/--/----</span>
-    </div>
-    <div>
-      🕒 Time : <span id="currentTime">--:--:--</span>
-    </div>
-  </div>
-
-  <script>
-    const SCRIPT_URL =
-      "https://script.google.com/macros/s/AKfycbww81ymNHGcJ8uTX09P932X0idIk3-GzSbl7EgzdcF8Fp4ENpmZj2ut92Qom9gEs5GE/exec";
-
-    // ==========================================
-    // นาฬิกาและวันที่ปัจจุบัน ( Real-time )
-    // ==========================================
-    function updateClock() {
-      const now = new Date();
-      const dateString = now.toLocaleDateString('th-TH', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-      const timeString = now.toLocaleTimeString('th-TH', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      });
-
-      document.getElementById("currentDate").innerText = dateString;
-      document.getElementById("currentTime").innerText = timeString;
-    }
-
-    updateClock();
-    setInterval(updateClock, 1000);
-
-
-    // ==========================================
-    // ดึงค่าจากระบบ Google Apps Script
-    // ==========================================
-    async function updateDashboard() {
-      try {
-        const response = await fetch(SCRIPT_URL);
-        const data = await response.json();
-
-        let online = document.getElementById("onlineStatus");
-        let tempStatus = document.getElementById("tempStatus");
-        let smokeStatus = document.getElementById("smokeStatus");
-
-        // กรณีบอร์ดดับ/ขาดการติดต่อ เกิน 15 วินาที (Server แจ้งว่า offline)
-        if (data.status === "offline") {
-          online.innerHTML = "🔴 OFFLINE";
-          online.style.background = "#ef4444";
-
-          document.getElementById("temp").innerHTML = "0.0°C";
-          document.getElementById("volt").innerHTML = "0.00V";
-          document.getElementById("smoke").innerHTML = "0";
-
-          tempStatus.className = "status normal";
-          tempStatus.innerHTML = "NORMAL";
-
-          smokeStatus.className = "status normal";
-          smokeStatus.innerHTML = "SAFE";
-        } 
-        // กรณีบอร์ดทำงานปกติ (Server แจ้งว่า online)
-        else {
-          online.innerHTML = "🟢 ONLINE";
-          online.style.background = "#22c55e";
-
-          document.getElementById("temp").innerHTML =
-            parseFloat(data.temp).toFixed(1) + "°C";
-
-          document.getElementById("volt").innerHTML =
-            parseFloat(data.volt).toFixed(2) + "V";
-
-          document.getElementById("smoke").innerHTML =
-            data.smoke;
-
-          // Temperature Status
-          let temp = parseFloat(data.temp);
-          tempStatus.className = "status";
-
-          if (temp >= 50) {
-            tempStatus.innerHTML = "DANGER";
-            tempStatus.classList.add("danger");
-          } else if (temp >= 40) {
-            tempStatus.innerHTML = "WARNING";
-            tempStatus.classList.add("warning");
-          } else {
-            tempStatus.innerHTML = "NORMAL";
-            tempStatus.classList.add("normal");
-          }
-
-          // Smoke Status
-          let smoke = parseInt(data.smoke);
-          smokeStatus.className = "status";
-
-          if (smoke <= 200) {
-            smokeStatus.innerHTML = "SAFE";
-            smokeStatus.classList.add("normal");
-          } else if (smoke <= 500) {
-            smokeStatus.innerHTML = "WARNING";
-            smokeStatus.classList.add("warning");
-          } else {
-            smokeStatus.innerHTML = "DANGER";
-            smokeStatus.classList.add("danger");
-          }
-        }
-
-      } catch (err) {
-        console.log("Fetch Error:", err);
-      }
-    }
-
-    updateDashboard();
-    setInterval(updateDashboard, 1000);
-
-    // ==============================
-    // Animation
-    // ==============================
-    function flash(id) {
-      const obj = document.getElementById(id);
-      obj.style.transform = "scale(1.08)";
-      obj.style.transition = "0.25s";
-      setTimeout(() => {
-        obj.style.transform = "scale(1)";
-      }, 250);
-    }
-
-    setInterval(() => {
-      flash("temp");
-      flash("volt");
-      flash("smoke");
-    }, 3000);
-  </script>
-
-</body>
-
-</html>
+  return ContentService
+    .createTextOutput(JSON.stringify(json))
+    .setMimeType(ContentService.MimeType.JSON);
+}

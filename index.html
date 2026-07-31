@@ -6,6 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ventilation</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js CDN (ขนาดเบา ~60KB) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     /* ------------------------------------------
@@ -20,6 +23,7 @@
       --shadow: rgba(0, 0, 0, 0.35);
       --btn-bg: #334155;
       --btn-text: #ffffff;
+      --grid-color: #334155;
     }
 
     [data-theme="light"] {
@@ -31,6 +35,7 @@
       --shadow: rgba(0, 0, 0, 0.08);
       --btn-bg: #e2e8f0;
       --btn-text: #0f172a;
+      --grid-color: #e2e8f0;
     }
 
     * {
@@ -102,6 +107,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 25px;
+      margin-bottom: 35px;
     }
 
     .card {
@@ -155,8 +161,40 @@
       color: #ffffff;
     }
 
+    /* ------------------------------------------
+       2. ส่วนกล่องกราฟ Analytics Section
+       ------------------------------------------ */
+    .charts-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 25px;
+      margin-bottom: 35px;
+    }
+
+    .chart-card {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 8px 20px var(--shadow);
+    }
+
+    .chart-card h3 {
+      font-size: 20px;
+      color: var(--text-main);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chart-wrapper {
+      position: relative;
+      height: 250px;
+      width: 100%;
+    }
+
     .footer {
-      margin-top: 45px;
+      margin-top: 15px;
       background: var(--bg-card);
       padding: 20px;
       border-radius: 20px;
@@ -169,7 +207,7 @@
     }
 
     /* ------------------------------------------
-       2. Responsive CSS สำหรับโทรศัพท์มือถือ
+       3. Responsive CSS สำหรับโทรศัพท์มือถือ
        ------------------------------------------ */
     @media(max-width:700px) {
       body {
@@ -208,6 +246,14 @@
         font-size: 42px;
       }
 
+      .charts-container {
+        grid-template-columns: 1fr; /* บนมือถือปรับเป็น 1 คอลัมน์ */
+      }
+
+      .chart-wrapper {
+        height: 200px;
+      }
+
       .footer {
         justify-content: center;
         font-size: 15px;
@@ -231,6 +277,7 @@
     </div>
   </div>
 
+  <!-- Cards แสดงค่าปัจจุบัน -->
   <div class="cards">
 
     <div class="card">
@@ -255,6 +302,25 @@
 
   </div>
 
+  <!-- ส่วนกล่องกราฟ Real-time Analytics -->
+  <div class="charts-container">
+    
+    <div class="chart-card">
+      <h3>🌡️ Temperature History (°C)</h3>
+      <div class="chart-wrapper">
+        <canvas id="tempChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h3>💨 Smoke Level History</h3>
+      <div class="chart-wrapper">
+        <canvas id="smokeChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
   <div class="footer">
     <div>
       📅 Date : <span id="currentDate">--/--/----</span>
@@ -269,7 +335,97 @@
       "https://script.google.com/macros/s/AKfycbzKVkXE_hKbJkregcHvukbXkNzRS7nvKft_INM1tcvzW7TsfoOhA5gxRRjp2FuEdVp1/exec";
 
     // ==========================================
-    // ระบบ Toggle Dark / Light Mode (พร้อมจำค่า)
+    // ตัวแปรและตั้งค่า Chart.js Real-time
+    // ==========================================
+    const maxDataPoints = 15; // จำกัดจุดข้อมูลย้อนหลังไม่เกิน 15 ค่าเพื่อเซฟ RAM
+
+    const getTextColor = () => document.documentElement.getAttribute("data-theme") === "light" ? "#0f172a" : "#ffffff";
+    const getGridColor = () => document.documentElement.getAttribute("data-theme") === "light" ? "#e2e8f0" : "#334155";
+
+    // กราฟ Temperature
+    const ctxTemp = document.getElementById('tempChart').getContext('2d');
+    const tempChart = new Chart(ctxTemp, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Temperature (°C)',
+          data: [],
+          borderColor: '#22c55e',
+          backgroundColor: 'rgba(34, 197, 94, 0.15)',
+          fill: true,
+          tension: 0.3,
+          borderWidth: 3,
+          pointRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: getTextColor }, grid: { color: getGridColor } },
+          y: { ticks: { color: getTextColor }, grid: { color: getGridColor }, beginAtZero: false }
+        }
+      }
+    });
+
+    // กราฟ Smoke
+    const ctxSmoke = document.getElementById('smokeChart').getContext('2d');
+    const smokeChart = new Chart(ctxSmoke, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Smoke Value',
+          data: [],
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.15)',
+          fill: true,
+          tension: 0.3,
+          borderWidth: 3,
+          pointRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: getTextColor }, grid: { color: getGridColor } },
+          y: { ticks: { color: getTextColor }, grid: { color: getGridColor }, beginAtZero: true }
+        }
+      }
+    });
+
+    // ฟังก์ชันอัปเดตกราฟพร้อมควบคุมขนาด Array
+    function addChartData(chart, label, value, alertType) {
+      chart.data.labels.push(label);
+      chart.data.datasets[0].data.push(value);
+
+      // เปลี่ยนสีกราฟตามระดับ Warning/Danger
+      if (alertType === "danger") {
+        chart.data.datasets[0].borderColor = '#ef4444';
+        chart.data.datasets[0].backgroundColor = 'rgba(239, 68, 68, 0.2)';
+      } else if (alertType === "warning") {
+        chart.data.datasets[0].borderColor = '#facc15';
+        chart.data.datasets[0].backgroundColor = 'rgba(250, 204, 21, 0.2)';
+      } else {
+        chart.data.datasets[0].borderColor = (chart === tempChart) ? '#22c55e' : '#3b82f6';
+        chart.data.datasets[0].backgroundColor = (chart === tempChart) ? 'rgba(34, 197, 94, 0.15)' : 'rgba(59, 130, 246, 0.15)';
+      }
+
+      // ถ้าเกิน 15 จุด ให้ตัดจุดเก่าสุดออก
+      if (chart.data.labels.length > maxDataPoints) {
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
+      }
+
+      chart.update('none'); // อัปเดตแบบประหยัด CPU
+    }
+
+    // ==========================================
+    // ระบบ Toggle Dark / Light Mode (พร้อมอัปเดตสี กราฟ)
     // ==========================================
     function toggleTheme() {
       const currentTheme = document.documentElement.getAttribute("data-theme");
@@ -284,9 +440,18 @@
         btn.innerHTML = "☀️ Light Mode";
         localStorage.setItem("theme", "light");
       }
+
+      // อัปเดตสีกราฟให้เข้ากับธีมใหม่
+      [tempChart, smokeChart].forEach(chart => {
+        chart.options.scales.x.ticks.color = getTextColor();
+        chart.options.scales.x.grid.color = getGridColor();
+        chart.options.scales.y.ticks.color = getTextColor();
+        chart.options.scales.y.grid.color = getGridColor();
+        chart.update();
+      });
     }
 
-    // โหลดค่าธีมเดิมที่เคยเลือกไว้จาก LocalStorage
+    // โหลดค่าธีมเดิมจาก LocalStorage
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "light") {
       document.documentElement.setAttribute("data-theme", "light");
@@ -328,8 +493,8 @@
         let online = document.getElementById("onlineStatus");
         let tempStatus = document.getElementById("tempStatus");
         let smokeStatus = document.getElementById("smokeStatus");
+        const timeNow = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-        // กรณีบอร์ดดับ/ขาดการติดต่อ เกิน 15 วินาที (Server แจ้งว่า offline)
         if (data.status === "offline") {
           online.innerHTML = "🔴 OFFLINE";
           online.style.background = "#ef4444";
@@ -344,37 +509,37 @@
           smokeStatus.className = "status normal";
           smokeStatus.innerHTML = "SAFE";
         } 
-        // กรณีบอร์ดทำงานปกติ (Server แจ้งว่า online)
         else {
           online.innerHTML = "🟢 ONLINE";
           online.style.background = "#22c55e";
 
-          document.getElementById("temp").innerHTML =
-            parseFloat(data.temp).toFixed(1) + "°C";
-
-          document.getElementById("volt").innerHTML =
-            parseFloat(data.volt).toFixed(2) + "V";
-
-          document.getElementById("smoke").innerHTML =
-            data.smoke;
-
-          // Temperature Status
           let temp = parseFloat(data.temp);
+          let volt = parseFloat(data.volt);
+          let smoke = parseInt(data.smoke);
+
+          document.getElementById("temp").innerHTML = temp.toFixed(1) + "°C";
+          document.getElementById("volt").innerHTML = volt.toFixed(2) + "V";
+          document.getElementById("smoke").innerHTML = smoke;
+
+          // Temp Status & Alert Class
+          let tempAlertType = "normal";
           tempStatus.className = "status";
 
           if (temp >= 50) {
             tempStatus.innerHTML = "DANGER";
             tempStatus.classList.add("danger");
+            tempAlertType = "danger";
           } else if (temp >= 40) {
             tempStatus.innerHTML = "WARNING";
             tempStatus.classList.add("warning");
+            tempAlertType = "warning";
           } else {
             tempStatus.innerHTML = "NORMAL";
             tempStatus.classList.add("normal");
           }
 
-          // Smoke Status
-          let smoke = parseInt(data.smoke);
+          // Smoke Status & Alert Class
+          let smokeAlertType = "normal";
           smokeStatus.className = "status";
 
           if (smoke <= 200) {
@@ -383,10 +548,16 @@
           } else if (smoke <= 500) {
             smokeStatus.innerHTML = "WARNING";
             smokeStatus.classList.add("warning");
+            smokeAlertType = "warning";
           } else {
             smokeStatus.innerHTML = "DANGER";
             smokeStatus.classList.add("danger");
+            smokeAlertType = "danger";
           }
+
+          // อัปเดตข้อมูลเข้าสู่เส้นกราฟ Real-time
+          addChartData(tempChart, timeNow, temp, tempAlertType);
+          addChartData(smokeChart, timeNow, smoke, smokeAlertType);
         }
 
       } catch (err) {

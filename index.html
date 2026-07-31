@@ -4,10 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- ชื่อ Title บน Tab เบราว์เซอร์ -->
   <title>Ventilation</title>
-
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
   <style>
@@ -133,7 +130,6 @@
 
   <div class="header">
     <h1>Battery Thermal Ventilation Unit</h1>
-
     <div class="online" id="onlineStatus">
       🟢 ONLINE
     </div>
@@ -176,20 +172,16 @@
     const SCRIPT_URL =
       "https://script.google.com/macros/s/AKfycbww81ymNHGcJ8uTX09P932X0idIk3-GzSbl7EgzdcF8Fp4ENpmZj2ut92Qom9gEs5GE/exec";
 
-    let lastUpdate = Date.now();
-
     // ==========================================
     // นาฬิกาและวันที่ปัจจุบัน ( Real-time )
     // ==========================================
     function updateClock() {
       const now = new Date();
-
       const dateString = now.toLocaleDateString('th-TH', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric'
       });
-
       const timeString = now.toLocaleTimeString('th-TH', {
         hour: '2-digit',
         minute: '2-digit',
@@ -206,16 +198,36 @@
 
 
     // ==========================================
-    // ดึงค่าจากระบบ (Google Apps Script)
+    // ดึงค่าจากระบบ Google Apps Script
     // ==========================================
     async function updateDashboard() {
       try {
         const response = await fetch(SCRIPT_URL);
         const data = await response.json();
 
-        // ตรวจสอบว่าส่งค่าสำเร็จและมีข้อมูลส่งมาจริงหรือไม่
-        if (data && data.temp !== undefined) {
-          lastUpdate = Date.now();
+        let online = document.getElementById("onlineStatus");
+        let tempStatus = document.getElementById("tempStatus");
+        let smokeStatus = document.getElementById("smokeStatus");
+
+        // กรณีบอร์ดดับ/ขาดการติดต่อ เกิน 15 วินาที (Server แจ้งว่า offline)
+        if (data.status === "offline") {
+          online.innerHTML = "🔴 OFFLINE";
+          online.style.background = "#ef4444";
+
+          document.getElementById("temp").innerHTML = "0.0°C";
+          document.getElementById("volt").innerHTML = "0.00V";
+          document.getElementById("smoke").innerHTML = "0";
+
+          tempStatus.className = "status normal";
+          tempStatus.innerHTML = "NORMAL";
+
+          smokeStatus.className = "status normal";
+          smokeStatus.innerHTML = "SAFE";
+        } 
+        // กรณีบอร์ดทำงานปกติ (Server แจ้งว่า online)
+        else {
+          online.innerHTML = "🟢 ONLINE";
+          online.style.background = "#22c55e";
 
           document.getElementById("temp").innerHTML =
             parseFloat(data.temp).toFixed(1) + "°C";
@@ -226,11 +238,8 @@
           document.getElementById("smoke").innerHTML =
             data.smoke;
 
-          //-------------------------
           // Temperature Status
-          //-------------------------
           let temp = parseFloat(data.temp);
-          let tempStatus = document.getElementById("tempStatus");
           tempStatus.className = "status";
 
           if (temp >= 50) {
@@ -244,11 +253,8 @@
             tempStatus.classList.add("normal");
           }
 
-          //-------------------------
           // Smoke Status
-          //-------------------------
           let smoke = parseInt(data.smoke);
-          let smokeStatus = document.getElementById("smokeStatus");
           smokeStatus.className = "status";
 
           if (smoke <= 200) {
@@ -269,40 +275,7 @@
     }
 
     updateDashboard();
-    setInterval(updateDashboard, 500);
-  </script>
-
-  <script>
-    // ==========================================
-    // ONLINE / OFFLINE Check & Reset to 0
-    // ==========================================
-    setInterval(function () {
-      let online = document.getElementById("onlineStatus");
-
-      // ถ้าระบบไม่ได้ส่งข้อมูลนานเกิน 10 วินาที (OFFLINE / หยุดทำงาน)
-      if (Date.now() - lastUpdate > 10000) {
-        online.innerHTML = "🔴 OFFLINE";
-        online.style.background = "#ef4444";
-
-        // รีเซ็ตค่าบนหน้าจอให้กลับเป็น 0
-        document.getElementById("temp").innerHTML = "0.0°C";
-        document.getElementById("volt").innerHTML = "0.00V";
-        document.getElementById("smoke").innerHTML = "0";
-
-        // ปรับสถานะกลับเป็นสถานะปกติ
-        let tempStatus = document.getElementById("tempStatus");
-        tempStatus.className = "status normal";
-        tempStatus.innerHTML = "NORMAL";
-
-        let smokeStatus = document.getElementById("smokeStatus");
-        smokeStatus.className = "status normal";
-        smokeStatus.innerHTML = "SAFE";
-      } else {
-        online.innerHTML = "🟢 ONLINE";
-        online.style.background = "#22c55e";
-      }
-    }, 1000);
-
+    setInterval(updateDashboard, 1000);
 
     // ==============================
     // Animation
@@ -311,7 +284,6 @@
       const obj = document.getElementById(id);
       obj.style.transform = "scale(1.08)";
       obj.style.transition = "0.25s";
-
       setTimeout(() => {
         obj.style.transform = "scale(1)";
       }, 250);

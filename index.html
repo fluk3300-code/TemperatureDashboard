@@ -545,14 +545,21 @@
           }
 
           // ----------------------------------------------------
-          // ตัวนับเวลาอัปเดตกราฟ (จุดละ 30 วินาที)
+          // ระบบนับเวลาอัปเดตกราฟ (จุดแรกลงทันที, จุดถัดไปทุกๆ 30 วินาที)
           // ----------------------------------------------------
-          chartTimerCounter++;
-          
-          if (chartTimerCounter === 1 || chartTimerCounter >= 30) {
+          if (tempChart.data.labels.length === 0) {
+            // ถ้ากราฟว่างเปล่า ให้บันทึกจุดแรกทันทีแล้วรีเซ็ตตัวนับ
             addChartData(tempChart, timeNow, temp, tempAlertType);
             addChartData(smokeChart, timeNow, smoke, smokeAlertType);
             chartTimerCounter = 0;
+          } else {
+            // วินาทีต่อๆ มาให้นับเพิ่มทีละ 1
+            chartTimerCounter++;
+            if (chartTimerCounter >= 30) {
+              addChartData(tempChart, timeNow, temp, tempAlertType);
+              addChartData(smokeChart, timeNow, smoke, smokeAlertType);
+              chartTimerCounter = 0; // ครบ 30 วินาทีค่อยลงจุดถัดไปและรีเซ็ตตัวนับ
+            }
           }
         }
 

@@ -106,7 +106,7 @@
       padding: 20px;
       border-radius: 20px;
       display: flex;
-      justify-content: space-between; /* จัดวันที่ไว้ฝั่งซ้าย และเวลาไว้ฝั่งขวา */
+      justify-content: space-between;
       flex-wrap: wrap;
       gap: 15px;
       font-size: 18px;
@@ -184,14 +184,12 @@
     function updateClock() {
       const now = new Date();
 
-      // วันที่ รูปแบบ วัน/เดือน/ปี พ.ศ.
       const dateString = now.toLocaleDateString('th-TH', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric'
       });
 
-      // เวลา รูปแบบ HH:MM:SS
       const timeString = now.toLocaleTimeString('th-TH', {
         hour: '2-digit',
         minute: '2-digit',
@@ -204,7 +202,7 @@
     }
 
     updateClock();
-    setInterval(updateClock, 1000); // อัปเดตเวลาทุก 1 วินาที
+    setInterval(updateClock, 1000);
 
 
     // ==========================================
@@ -215,55 +213,58 @@
         const response = await fetch(SCRIPT_URL);
         const data = await response.json();
 
-        lastUpdate = Date.now();
+        // ตรวจสอบว่าส่งค่าสำเร็จและมีข้อมูลส่งมาจริงหรือไม่
+        if (data && data.temp !== undefined) {
+          lastUpdate = Date.now();
 
-        document.getElementById("temp").innerHTML =
-          parseFloat(data.temp).toFixed(1) + "°C";
+          document.getElementById("temp").innerHTML =
+            parseFloat(data.temp).toFixed(1) + "°C";
 
-        document.getElementById("volt").innerHTML =
-          parseFloat(data.volt).toFixed(2) + "V";
+          document.getElementById("volt").innerHTML =
+            parseFloat(data.volt).toFixed(2) + "V";
 
-        document.getElementById("smoke").innerHTML =
-          data.smoke;
+          document.getElementById("smoke").innerHTML =
+            data.smoke;
 
-        //-------------------------
-        // Temperature Status
-        //-------------------------
-        let temp = parseFloat(data.temp);
-        let tempStatus = document.getElementById("tempStatus");
-        tempStatus.className = "status";
+          //-------------------------
+          // Temperature Status
+          //-------------------------
+          let temp = parseFloat(data.temp);
+          let tempStatus = document.getElementById("tempStatus");
+          tempStatus.className = "status";
 
-        if (temp >= 50) {
-          tempStatus.innerHTML = "DANGER";
-          tempStatus.classList.add("danger");
-        } else if (temp >= 40) {
-          tempStatus.innerHTML = "WARNING";
-          tempStatus.classList.add("warning");
-        } else {
-          tempStatus.innerHTML = "NORMAL";
-          tempStatus.classList.add("normal");
-        }
+          if (temp >= 50) {
+            tempStatus.innerHTML = "DANGER";
+            tempStatus.classList.add("danger");
+          } else if (temp >= 40) {
+            tempStatus.innerHTML = "WARNING";
+            tempStatus.classList.add("warning");
+          } else {
+            tempStatus.innerHTML = "NORMAL";
+            tempStatus.classList.add("normal");
+          }
 
-        //-------------------------
-        // Smoke Status
-        //-------------------------
-        let smoke = parseInt(data.smoke);
-        let smokeStatus = document.getElementById("smokeStatus");
-        smokeStatus.className = "status";
+          //-------------------------
+          // Smoke Status
+          //-------------------------
+          let smoke = parseInt(data.smoke);
+          let smokeStatus = document.getElementById("smokeStatus");
+          smokeStatus.className = "status";
 
-        if (smoke <= 200) {
-          smokeStatus.innerHTML = "SAFE";
-          smokeStatus.classList.add("normal");
-        } else if (smoke <= 500) {
-          smokeStatus.innerHTML = "WARNING";
-          smokeStatus.classList.add("warning");
-        } else {
-          smokeStatus.innerHTML = "DANGER";
-          smokeStatus.classList.add("danger");
+          if (smoke <= 200) {
+            smokeStatus.innerHTML = "SAFE";
+            smokeStatus.classList.add("normal");
+          } else if (smoke <= 500) {
+            smokeStatus.innerHTML = "WARNING";
+            smokeStatus.classList.add("warning");
+          } else {
+            smokeStatus.innerHTML = "DANGER";
+            smokeStatus.classList.add("danger");
+          }
         }
 
       } catch (err) {
-        console.log(err);
+        console.log("Fetch Error:", err);
       }
     }
 
@@ -272,15 +273,30 @@
   </script>
 
   <script>
-    // ==============================
-    // ONLINE / OFFLINE Check
-    // ==============================
+    // ==========================================
+    // ONLINE / OFFLINE Check & Reset to 0
+    // ==========================================
     setInterval(function () {
       let online = document.getElementById("onlineStatus");
 
+      // ถ้าระบบไม่ได้ส่งข้อมูลนานเกิน 10 วินาที (OFFLINE / หยุดทำงาน)
       if (Date.now() - lastUpdate > 10000) {
         online.innerHTML = "🔴 OFFLINE";
         online.style.background = "#ef4444";
+
+        // รีเซ็ตค่าบนหน้าจอให้กลับเป็น 0
+        document.getElementById("temp").innerHTML = "0.0°C";
+        document.getElementById("volt").innerHTML = "0.00V";
+        document.getElementById("smoke").innerHTML = "0";
+
+        // ปรับสถานะกลับเป็นสถานะปกติ
+        let tempStatus = document.getElementById("tempStatus");
+        tempStatus.className = "status normal";
+        tempStatus.innerHTML = "NORMAL";
+
+        let smokeStatus = document.getElementById("smokeStatus");
+        smokeStatus.className = "status normal";
+        smokeStatus.innerHTML = "SAFE";
       } else {
         online.innerHTML = "🟢 ONLINE";
         online.style.background = "#22c55e";

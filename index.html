@@ -7,15 +7,11 @@
   <title>Ventilation</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   
-  <!-- Chart.js CDN (ขนาดเบา ~60KB) -->
+  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    /* ------------------------------------------
-       1. ตัวแปรชุดสี (Theme Variables)
-       ------------------------------------------ */
     :root {
-      /* Dark Mode (ค่าเริ่มต้น) */
       --bg-body: #0f172a;
       --bg-card: #1e293b;
       --text-main: #ffffff;
@@ -27,7 +23,6 @@
     }
 
     [data-theme="light"] {
-      /* Light Mode */
       --bg-body: #f8fafc;
       --bg-card: #ffffff;
       --text-main: #0f172a;
@@ -73,7 +68,6 @@
       font-weight: 700;
     }
 
-    /* ปุ่มสลับธีม Dark / Light */
     .theme-toggle {
       background: var(--btn-bg);
       color: var(--btn-text);
@@ -105,15 +99,15 @@
 
     .cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 25px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
       margin-bottom: 35px;
     }
 
     .card {
       background: var(--bg-card);
       border-radius: 20px;
-      padding: 30px;
+      padding: 25px;
       box-shadow: 0 8px 20px var(--shadow);
     }
 
@@ -122,48 +116,34 @@
     }
 
     .icon {
-      font-size: 55px;
-      margin-bottom: 15px;
-    }
-
-    .title {
-      font-size: 20px;
-      color: var(--text-sub);
+      font-size: 45px;
       margin-bottom: 10px;
     }
 
+    .title {
+      font-size: 16px;
+      color: var(--text-sub);
+      margin-bottom: 8px;
+    }
+
     .value {
-      font-size: 60px;
+      font-size: 42px;
       font-weight: bold;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
 
     .status {
       display: inline-block;
-      padding: 10px 18px;
-      border-radius: 20px;
+      padding: 6px 14px;
+      border-radius: 15px;
       font-weight: bold;
-      font-size: 18px;
+      font-size: 14px;
     }
 
-    .normal {
-      background: #22c55e;
-      color: #ffffff;
-    }
+    .normal { background: #22c55e; color: #ffffff; }
+    .warning { background: #facc15; color: #111827; }
+    .danger { background: #ef4444; color: #ffffff; }
 
-    .warning {
-      background: #facc15;
-      color: #111827;
-    }
-
-    .danger {
-      background: #ef4444;
-      color: #ffffff;
-    }
-
-    /* ------------------------------------------
-       2. ส่วนกล่องกราฟ Analytics Section
-       ------------------------------------------ */
     .charts-container {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -189,7 +169,7 @@
 
     .chart-wrapper {
       position: relative;
-      height: 250px;
+      height: 280px;
       width: 100%;
     }
 
@@ -206,58 +186,16 @@
       box-shadow: 0 4px 15px var(--shadow);
     }
 
-    /* ------------------------------------------
-       3. Responsive CSS สำหรับโทรศัพท์มือถือ
-       ------------------------------------------ */
     @media(max-width:700px) {
-      body {
-        padding: 15px;
-      }
-
-      .header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 15px;
-      }
-
-      .header-left {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-      }
-
-      .header h1 {
-        font-size: 24px;
-      }
-
-      .theme-toggle {
-        width: 100%;
-        justify-content: center;
-        padding: 12px;
-        font-size: 16px;
-      }
-
-      .online {
-        text-align: center;
-        width: 100%;
-      }
-
-      .value {
-        font-size: 42px;
-      }
-
-      .charts-container {
-        grid-template-columns: 1fr;
-      }
-
-      .chart-wrapper {
-        height: 200px;
-      }
-
-      .footer {
-        justify-content: center;
-        font-size: 15px;
-      }
+      body { padding: 15px; }
+      .header { flex-direction: column; align-items: stretch; gap: 15px; }
+      .header-left { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .header h1 { font-size: 24px; }
+      .theme-toggle, .online { width: 100%; text-align: center; justify-content: center; }
+      .value { font-size: 36px; }
+      .charts-container { grid-template-columns: 1fr; }
+      .chart-wrapper { height: 220px; }
+      .footer { justify-content: center; font-size: 15px; }
     }
   </style>
 </head>
@@ -276,12 +214,31 @@
     </div>
   </div>
 
+  <!-- Cards แสดงอุณหภูมิ 4 ตัว + Volt + Smoke -->
   <div class="cards">
+    <div class="card" id="cardTemp1">
+      <div class="icon">🌡️</div>
+      <div class="title">Temp 1 (Control)</div>
+      <div class="value" id="temp1">0.0°C</div>
+      <div class="status normal" id="tempStatus1">NORMAL</div>
+    </div>
+
     <div class="card">
       <div class="icon">🌡️</div>
-      <div class="title">Temperature</div>
-      <div class="value" id="temp">0.0°C</div>
-      <div class="status normal" id="tempStatus">NORMAL</div>
+      <div class="title">Temp 2</div>
+      <div class="value" id="temp2">0.0°C</div>
+    </div>
+
+    <div class="card">
+      <div class="icon">🌡️</div>
+      <div class="title">Temp 3</div>
+      <div class="value" id="temp3">0.0°C</div>
+    </div>
+
+    <div class="card">
+      <div class="icon">🌡️</div>
+      <div class="title">Temp 4</div>
+      <div class="value" id="temp4">0.0°C</div>
     </div>
 
     <div class="card">
@@ -300,7 +257,7 @@
 
   <div class="charts-container">
     <div class="chart-card">
-      <h3>🌡️ Temperature History (°C)</h3>
+      <h3>🌡️ Temperature 1 History (°C)</h3>
       <div class="chart-wrapper">
         <canvas id="tempChart"></canvas>
       </div>
@@ -315,35 +272,28 @@
   </div>
 
   <div class="footer">
-    <div>
-      📅 Date : <span id="currentDate">--/--/----</span>
-    </div>
-    <div>
-      🕒 Time : <span id="currentTime">--:--:--</span>
-    </div>
+    <div>📅 Date : <span id="currentDate">--/--/----</span></div>
+    <div>🕒 Time : <span id="currentTime">--:--:--</span></div>
   </div>
 
   <script>
     const SCRIPT_URL =
-      "https://script.google.com/macros/s/AKfycbzKVkXE_hKbJkregcHvukbXkNzRS7nvKft_INM1tcvzW7TsfoOhA5gxRRjp2FuEdVp1/exec";
+      "https://script.google.com/macros/s/AKfycbxpl61wc9tK3JF5jPAR-_aw6M7lX7dSHevAb49Q7lBc_4STRYEczx6q6q01XDTys88p/exec";
 
-    // ==========================================
-    // ตัวแปรและตั้งค่า Chart.js Real-time
-    // ==========================================
-    const maxDataPoints = 10;     // แสดงสูงสุด 10 จุด
-    let chartTimerCounter = 0;   // ตัวนับวินาทีสำหรับอัปเดตกราฟ
+    const maxDataPoints = 10;
+    let chartTimerCounter = 0;
 
     const getTextColor = () => document.documentElement.getAttribute("data-theme") === "light" ? "#0f172a" : "#ffffff";
     const getGridColor = () => document.documentElement.getAttribute("data-theme") === "light" ? "#e2e8f0" : "#334155";
 
-    // กราฟ Temperature
+    // กราฟ Temperature (เส้นเดียวของ Temp 1)
     const ctxTemp = document.getElementById('tempChart').getContext('2d');
     const tempChart = new Chart(ctxTemp, {
       type: 'line',
       data: {
         labels: [],
         datasets: [{
-          label: 'Temperature (°C)',
+          label: 'Temp 1 (°C)',
           data: [],
           borderColor: '#22c55e',
           backgroundColor: 'rgba(34, 197, 94, 0.15)',
@@ -392,7 +342,6 @@
       }
     });
 
-    // ฟังก์ชันอัปเดตกราฟ (สะสมครบ 10 จุดแล้วเคลียร์เริ่มนับใหม่)
     function addChartData(chart, label, value, alertType) {
       if (chart.data.labels.length >= maxDataPoints) {
         chart.data.labels = [];
@@ -402,23 +351,22 @@
       chart.data.labels.push(label);
       chart.data.datasets[0].data.push(value);
 
-      if (alertType === "danger") {
-        chart.data.datasets[0].borderColor = '#ef4444';
-        chart.data.datasets[0].backgroundColor = 'rgba(239, 68, 68, 0.2)';
-      } else if (alertType === "warning") {
-        chart.data.datasets[0].borderColor = '#facc15';
-        chart.data.datasets[0].backgroundColor = 'rgba(250, 204, 21, 0.2)';
-      } else {
-        chart.data.datasets[0].borderColor = (chart === tempChart) ? '#22c55e' : '#3b82f6';
-        chart.data.datasets[0].backgroundColor = (chart === tempChart) ? 'rgba(34, 197, 94, 0.15)' : 'rgba(59, 130, 246, 0.15)';
+      if (chart === tempChart) {
+        if (alertType === "danger") {
+          chart.data.datasets[0].borderColor = '#ef4444';
+          chart.data.datasets[0].backgroundColor = 'rgba(239, 68, 68, 0.2)';
+        } else if (alertType === "warning") {
+          chart.data.datasets[0].borderColor = '#facc15';
+          chart.data.datasets[0].backgroundColor = 'rgba(250, 204, 21, 0.2)';
+        } else {
+          chart.data.datasets[0].borderColor = '#22c55e';
+          chart.data.datasets[0].backgroundColor = 'rgba(34, 197, 94, 0.15)';
+        }
       }
 
       chart.update();
     }
 
-    // ==========================================
-    // ระบบ Toggle Dark / Light Mode
-    // ==========================================
     function toggleTheme() {
       const currentTheme = document.documentElement.getAttribute("data-theme");
       const btn = document.getElementById("themeToggle");
@@ -448,40 +396,21 @@
       document.getElementById("themeToggle").innerHTML = "☀️ Light Mode";
     }
 
-    // ==========================================
-    // นาฬิกาและวันที่ปัจจุบัน ( Real-time )
-    // ==========================================
     function updateClock() {
       const now = new Date();
-      const dateString = now.toLocaleDateString('th-TH', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-      const timeString = now.toLocaleTimeString('th-TH', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      });
-
-      document.getElementById("currentDate").innerText = dateString;
-      document.getElementById("currentTime").innerText = timeString;
+      document.getElementById("currentDate").innerText = now.toLocaleDateString('th-TH', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      document.getElementById("currentTime").innerText = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
     }
-
     updateClock();
     setInterval(updateClock, 1000);
 
-    // ==========================================
-    // ดึงข้อมูลหลัก (ทำงานทุกๆ 1 วินาที)
-    // ==========================================
     async function updateDashboard() {
       try {
         const response = await fetch(SCRIPT_URL);
         const data = await response.json();
 
         let online = document.getElementById("onlineStatus");
-        let tempStatus = document.getElementById("tempStatus");
+        let tempStatus1 = document.getElementById("tempStatus1");
         let smokeStatus = document.getElementById("smokeStatus");
         const timeNow = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
@@ -489,13 +418,15 @@
           online.innerHTML = "🔴 OFFLINE";
           online.style.background = "#ef4444";
 
-          document.getElementById("temp").innerHTML = "0.0°C";
+          document.getElementById("temp1").innerHTML = "0.0°C";
+          document.getElementById("temp2").innerHTML = "0.0°C";
+          document.getElementById("temp3").innerHTML = "0.0°C";
+          document.getElementById("temp4").innerHTML = "0.0°C";
           document.getElementById("volt").innerHTML = "0.00V";
           document.getElementById("smoke").innerHTML = "0";
 
-          tempStatus.className = "status normal";
-          tempStatus.innerHTML = "NORMAL";
-
+          tempStatus1.className = "status normal";
+          tempStatus1.innerHTML = "NORMAL";
           smokeStatus.className = "status normal";
           smokeStatus.innerHTML = "SAFE";
         } 
@@ -503,32 +434,37 @@
           online.innerHTML = "🟢 ONLINE";
           online.style.background = "#22c55e";
 
-          let temp = parseFloat(data.temp);
-          let volt = parseFloat(data.volt);
-          let smoke = parseInt(data.smoke);
+          let t1 = parseFloat(data.temp1 || 0);
+          let t2 = parseFloat(data.temp2 || 0);
+          let t3 = parseFloat(data.temp3 || 0);
+          let t4 = parseFloat(data.temp4 || 0);
+          let volt = parseFloat(data.volt || 0);
+          let smoke = parseInt(data.smoke || 0);
 
-          // อัปเดตตัวเลขบน Card ทันทีทุกๆ 1 วินาที
-          document.getElementById("temp").innerHTML = temp.toFixed(1) + "°C";
+          document.getElementById("temp1").innerHTML = t1.toFixed(1) + "°C";
+          document.getElementById("temp2").innerHTML = t2.toFixed(1) + "°C";
+          document.getElementById("temp3").innerHTML = t3.toFixed(1) + "°C";
+          document.getElementById("temp4").innerHTML = t4.toFixed(1) + "°C";
           document.getElementById("volt").innerHTML = volt.toFixed(2) + "V";
           document.getElementById("smoke").innerHTML = smoke;
 
-          // คำนวณสถานะ Temp
+          // สถานะ Temp 1
           let tempAlertType = "normal";
-          tempStatus.className = "status";
-          if (temp >= 50) {
-            tempStatus.innerHTML = "DANGER";
-            tempStatus.classList.add("danger");
+          tempStatus1.className = "status";
+          if (t1 >= 50) {
+            tempStatus1.innerHTML = "DANGER";
+            tempStatus1.classList.add("danger");
             tempAlertType = "danger";
-          } else if (temp >= 40) {
-            tempStatus.innerHTML = "WARNING";
-            tempStatus.classList.add("warning");
+          } else if (t1 >= 40) {
+            tempStatus1.innerHTML = "WARNING";
+            tempStatus1.classList.add("warning");
             tempAlertType = "warning";
           } else {
-            tempStatus.innerHTML = "NORMAL";
-            tempStatus.classList.add("normal");
+            tempStatus1.innerHTML = "NORMAL";
+            tempStatus1.classList.add("normal");
           }
 
-          // คำนวณสถานะ Smoke
+          // สถานะ Smoke
           let smokeAlertType = "normal";
           smokeStatus.className = "status";
           if (smoke <= 200) {
@@ -544,21 +480,17 @@
             smokeAlertType = "danger";
           }
 
-          // ----------------------------------------------------
-          // ระบบนับเวลาอัปเดตกราฟ (จุดแรกลงทันที, จุดถัดไปทุกๆ 30 วินาที)
-          // ----------------------------------------------------
+          // บันทึกลงกราฟ Temp 1 และ Smoke ทุกๆ 30 วินาที
           if (tempChart.data.labels.length === 0) {
-            // ถ้ากราฟว่างเปล่า ให้บันทึกจุดแรกทันทีแล้วรีเซ็ตตัวนับ
-            addChartData(tempChart, timeNow, temp, tempAlertType);
+            addChartData(tempChart, timeNow, t1, tempAlertType);
             addChartData(smokeChart, timeNow, smoke, smokeAlertType);
             chartTimerCounter = 0;
           } else {
-            // วินาทีต่อๆ มาให้นับเพิ่มทีละ 1
             chartTimerCounter++;
             if (chartTimerCounter >= 30) {
-              addChartData(tempChart, timeNow, temp, tempAlertType);
+              addChartData(tempChart, timeNow, t1, tempAlertType);
               addChartData(smokeChart, timeNow, smoke, smokeAlertType);
-              chartTimerCounter = 0; // ครบ 30 วินาทีค่อยลงจุดถัดไปและรีเซ็ตตัวนับ
+              chartTimerCounter = 0;
             }
           }
         }
@@ -571,22 +503,17 @@
     updateDashboard();
     setInterval(updateDashboard, 1000);
 
-    // ==========================================
-    // Card Flash Animation
-    // ==========================================
     function flash(id) {
       const obj = document.getElementById(id);
       if (obj) {
         obj.style.transform = "scale(1.08)";
         obj.style.transition = "0.25s";
-        setTimeout(() => {
-          obj.style.transform = "scale(1)";
-        }, 250);
+        setTimeout(() => { obj.style.transform = "scale(1)"; }, 250);
       }
     }
 
     setInterval(() => {
-      flash("temp");
+      flash("temp1");
       flash("volt");
       flash("smoke");
     }, 3000);
